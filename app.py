@@ -25,18 +25,25 @@ mathlive_input = components.declare_component("mathlive_input", path="math_keybo
 # --- 2. DATABASES ---
 QUESTION_BANK = [
     {
-        "id": "q1",
-        "problem": "Differentiate $f(x) = (x^2 + 1)e^x$",
-        "function": "(x**2 + 1)*exp(x)",
+        "id": "q_basic_1",
+        "problem": "Differentiate $f(x) = 4x^3 - 2e^x + 9$",
+        "function": "4*x**3 - 2*exp(x) + 9",
         "variable": "x",
-        "skills": ["Product Rule", "Power Rule", "Exponential Rule"]
+        "skills": ["Power Rule", "Exponential Rule", "Constant Rule", "Sum/Difference Rule"]
     },
     {
-        "id": "q2",
-        "problem": "Differentiate $g(t) = \\frac{3t^3 - 4\\sqrt{t}}{t^2}$",
-        "function": "(3*t**3 - 4*sqrt(t))/t**2",
-        "variable": "t",
-        "skills": ["Quotient Rule alternative", "Fractional Exponents", "Power Rule"]
+        "id": "q_basic_2",
+        "problem": "Differentiate $g(x) = \\frac{6}{x} + 5x$",
+        "function": "6/x + 5*x",
+        "variable": "x",
+        "skills": ["Power Rule with Negative Exponents", "Power Rule"]
+    },
+    {
+        "id": "q_basic_3",
+        "problem": "Differentiate $f(x) = 4\\sqrt{x} + 3x^2 - e^x$",
+        "function": "4*sqrt(x) + 3*x**2 - exp(x)",
+        "variable": "x",
+        "skills": ["Power Rule with Fractional Exponents", "Power Rule", "Exponential Rule"]
     }
 ]
 
