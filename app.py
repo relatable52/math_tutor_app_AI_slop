@@ -40,10 +40,22 @@ QUESTION_BANK = [
     }
 ]
 
-LEARNER_PROFILE = {
-    "student_id": "STU-101",
-    "proficiency": "Beginner",
-    "recurring_errors": ["Leibniz false start (u'v' instead of u'v + uv')", "Sign errors with negative exponents"]
+STUDENT_PROFILES = {
+    "STU-101 (Beginner)": {
+        "student_id": "STU-101",
+        "proficiency": "Beginner",
+        "recurring_errors": ["Leibniz false start (u'v' instead of u'v + uv')", "Sign errors with negative exponents"]
+    },
+    "STU-202 (Careless Intermediate)": {
+        "student_id": "STU-202",
+        "proficiency": "Intermediate",
+        "recurring_errors": ["Rushes through algebra, often dropping constants or coefficients", "Forgets to distribute negative signs"]
+    },
+    "STU-303 (Conceptual Learner)": {
+        "student_id": "STU-303",
+        "proficiency": "Beginner",
+        "recurring_errors": ["Struggles with abstract notation", "Needs real-world analogies to understand the rules"]
+    }
 }
 
 # --- 3. SYMPY VERIFICATION TOOL ---
@@ -124,6 +136,17 @@ current_q = QUESTION_BANK[st.session_state.q_index]
 # --- 6. USER INTERFACE & WORKFLOW ---
 st.set_page_config(page_title="AI Math Tutor", layout="centered")
 
+# Interactive Sidebar Profile Selector
+with st.sidebar:
+    st.header("Control Panel")
+    st.markdown("Use this to test how the AI adapts its hints to different student types.")
+    
+    selected_profile_key = st.selectbox("Select Active Learner Profile:", list(STUDENT_PROFILES.keys()))
+    active_profile = STUDENT_PROFILES[selected_profile_key]
+    
+    st.subheader("Profile Data Sent to AI:")
+    st.json(active_profile)
+
 st.title("💬 Calculus ITS Chat")
 
 # Render Chat History
@@ -169,7 +192,7 @@ if not st.session_state.solved:
                         tutor_msg = "I couldn't parse that mathematical format. Please ensure your expression is complete before submitting."
                     else:
                         with st.spinner("Tutor is typing..."):
-                            tutor_msg = generate_hint(current_q, LEARNER_PROFILE, student_math, student_text)
+                            tutor_msg = generate_hint(current_q, active_profile, student_math, student_text)
                     
                     st.session_state.messages.append({"role": "assistant", "content": tutor_msg})
                 
