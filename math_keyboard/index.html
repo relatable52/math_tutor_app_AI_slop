@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Load MathLive -->
+    <script src="https://unpkg.com/mathlive"></script>
+    <style>
+        body { margin: 0; padding: 5px; background: transparent; font-family: sans-serif; }
+        math-field { 
+            font-size: 20px; 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px;
+            box-sizing: border-box;
+            background: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <math-field id="formula"></math-field>
+    
+    <script>
+        const mf = document.getElementById('formula');
+
+        // 1. Function to send data back to Streamlit Python
+        function sendValue(val) {
+            window.parent.postMessage({
+                isStreamlitMessage: true,
+                type: "streamlit:setComponentValue",
+                value: val
+            }, "*");
+        }
+
+        // 2. Function to auto-resize the iframe height
+        function setFrameHeight() {
+            window.parent.postMessage({
+                isStreamlitMessage: true,
+                type: "streamlit:setFrameHeight",
+                height: document.body.scrollHeight
+            }, "*");
+        }
+
+        // 3. Listen for user input on the math keyboard
+        mf.addEventListener('input', () => {
+            // Send the robust ASCII-math string back to the app.py
+            sendValue(mf.getValue('ascii-math'));
+        });
+
+        // 4. Streamlit Handshake Protocol
+        window.addEventListener("message", function(event) {
+            if (event.data.type === "streamlit:render") {
+                // Resize iframe when Streamlit renders
+                setFrameHeight();
+            }
+        });
+
+        // Tell Streamlit the component is ready
+        window.parent.postMessage({
+            isStreamlitMessage: true,
+            type: "streamlit:componentReady",
+            apiVersion: 1
+        }, "*");
+    </script>
+</body>
+</html>
