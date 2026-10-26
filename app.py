@@ -3,7 +3,7 @@ import streamlit as st
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
 import streamlit.components.v1 as components
-from google import genai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # --- 1. SECRETS & CONFIGURATION ---
@@ -17,7 +17,10 @@ if not api_key:
         st.error("API Key not found. Please set GEMINI_API_KEY in your .env file or Hugging Face secrets.")
         st.stop()
 
-client = genai.Client(api_key=api_key)
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://api.groq.com/openai/v1"
+)
 
 # Register the custom MathLive component
 mathlive_input = components.declare_component("mathlive_input", path="math_keyboard")
@@ -90,12 +93,15 @@ def verify_robust_derivative(function_str, student_math, variable='x'):
 
 # --- 4. GEMINI PEDAGOGICAL ENGINE ---
 def generate_hint(question, profile, student_math, student_text):
-    """Prompts Gemini to diagnose the error and scaffold learning."""
+    """Prompts the LLM to diagnose the error and scaffold learning using the Socratic method."""
     prompt = f"""
-    You are an expert AI Calculus Tutor interacting with a student in a chat. 
-    The student has submitted an incorrect answer. Diagnose the error and provide a scaffolding hint. 
+    You are an AI Calculus Tutor interacting with a student in a chat. 
+    The student has submitted an incomplete or incorrect answer. Diagnose the error and provide a scaffolding hint. 
     
-    CRITICAL RULE: DO NOT GIVE THE FINAL ANSWER OR THE FULL CORRECT EQUATION. 
+    CRITICAL RULES: 
+    - DO NOT GIVE THE FINAL ANSWER OR THE FULL CORRECT EQUATION.
+    - DO NOT TELL THE STUDENT EXACTLY WHAT TO DO NEXT. 
+    - ALWAYS USE PROPER MATH FORMATTING (e.g., $x^2$ instead of (x^2)).
     
     === SYSTEM CONTEXT ===
     Problem: {question['problem']}
@@ -110,22 +116,29 @@ def generate_hint(question, profile, student_math, student_text):
     Student's Explanation: {student_text}
     
     === INSTRUCTIONS ===
-    1. Speak directly to the student in a warm, encouraging, and conversational tone.
-    2. Read their explanation to deduce their misconception.
-    3. Generate a concise hint (1-3 sentences) that guides them to the next logical step.
-    4. Keep it brief and conversational, suitable for a chat interface.
+    1. Validate what the student did correctly first (if anything) in a warm tone.
+    2. Identify the core misconception or missing step internally, but DO NOT state it directly.
+    3. Use the Socratic method: Ask exactly ONE targeted, thought-provoking question that leads the student to discover the missing step on their own.
+    4. Keep the total response concise (2-4 sentences max) and end with your guiding question.
     """
     
     try:
-        # The new generate_content syntax requires passing the model name here
-        response = client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents=prompt
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
+                {"role": "system", "content": "You are an AI Calculus Tutor."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.6, # Lowered slightly for more pedagogical consistency
+            max_tokens=250
         )
-        return response.text
+        raw_text = response.choices[0].message.content
+        # Force-replace standard LaTeX wrappers with Streamlit-friendly dollar signs
+        clean_text = raw_text.replace(r'\(', '$').replace(r'\)', '$').replace(r'\[', '$$').replace(r'\]', '$$')
+        return clean_text
     except Exception as e:
-        print(f"GEMINI API ERROR: {e}") 
-        return f"System error generating hint."
+        print(f"LLM API ERROR: {e}") 
+        return f"System error generating hint. (Dev Log: {str(e)})"
 
 # --- 5. SESSION STATE MANAGEMENT ---
 if "q_index" not in st.session_state:
