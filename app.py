@@ -124,7 +124,7 @@ def generate_hint(question, profile, student_math, student_text):
     
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": "You are an AI Calculus Tutor."},
                 {"role": "user", "content": prompt}
